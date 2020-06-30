@@ -1,5 +1,6 @@
 package com.example.taxiapp.activity
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -28,7 +29,6 @@ class PassengerSignInActivity : AppCompatActivity() {
 
     private var isLoginModeActive = false
 
-    //аутификация пользователя
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
     private lateinit var passengerUsersDatabaseReference: DatabaseReference
@@ -47,10 +47,10 @@ class PassengerSignInActivity : AppCompatActivity() {
         database = Firebase.database
         passengerUsersDatabaseReference = database.getReference("passengerUsers")
         auth = FirebaseAuth.getInstance()
-        /*todo start activity  for active passenger user
-          // if (auth.currentUser != null) {
-            startActivity(Intent(this@SignInActivity, UserListActivity::class.java))
-        }*/
+
+        auth.currentUser?.let {
+            startActivity(Intent(this@PassengerSignInActivity, PassengerMapsActivity::class.java))
+        }
 
     }
 
@@ -60,25 +60,27 @@ class PassengerSignInActivity : AppCompatActivity() {
             textInputEmail.error = "Please input your email"
             false
         } else {
-            textInputEmail.error = ""
             true
         }
     }
 
     private fun validateName(): Boolean {
         val nameInput: String = textInputName.editText?.text.toString().trim()
-        return when {
-            nameInput.isEmpty() -> {
-                textInputName.error = "Please input your name"
-                false
-            }
-            nameInput.length > 15 -> {
-                textInputName.error = "Name length have to be less than 15"
-                false
-            }
-            else -> {
-                textInputName.error = ""
-                true
+        return if (isLoginModeActive) {
+            true
+        } else {
+            when {
+                nameInput.isEmpty() -> {
+                    textInputName.error = "Please input your name"
+                    false
+                }
+                nameInput.length > 15 -> {
+                    textInputName.error = "Name length have to be less than 15"
+                    false
+                }
+                else -> {
+                    true
+                }
             }
         }
     }
@@ -96,7 +98,6 @@ class PassengerSignInActivity : AppCompatActivity() {
                 textInputPassword.error = "Password length have to be more than 6"
                 false
             }
-            //если регистрация активна и пароли не совпадают
             !isLoginModeActive -> if (passwordInput != confirmPasswordInput) {
                 textInputPassword.error = "Password have to match"
                 false
@@ -104,15 +105,13 @@ class PassengerSignInActivity : AppCompatActivity() {
                 true
             }
             else -> {
-                textInputPassword.error = ""
                 true
             }
         }
     }
 
     fun loginSignUpUser(view: View) {
-        //побайтовое "или" котлина -> "or"!!!!
-        if (!validateEmail() or !validateName() or !validatePassword()) {
+        if (!validateEmail() or !validatePassword() or !validateName()) {
             return
         }
         authenticationUser(
@@ -123,15 +122,17 @@ class PassengerSignInActivity : AppCompatActivity() {
 
     private fun authenticationUser(email: String, password: String) {
         if (isLoginModeActive) {
-            //если пользователь залогиневается
             auth.signInWithEmailAndPassword(
                 email, password
             ).addOnCompleteListener {
                 if (it.isSuccessful) {
                     Log.d(DriverSignInActivity.TAG, "signInWithEmail:success")
-                    val user = auth.currentUser
-                    /*todo start activity log passenger user
-                    startActivity(Intent(this@SignInActivity, UserListActivity::class.java))*/
+                    startActivity(
+                        Intent(
+                            this@PassengerSignInActivity,
+                            PassengerMapsActivity::class.java
+                        )
+                    )
                 } else {
                     Log.w(DriverSignInActivity.TAG, "signInWithEmail:failure", it.exception)
                     Toast.makeText(
@@ -141,16 +142,17 @@ class PassengerSignInActivity : AppCompatActivity() {
                 }
             }
         } else {
-            //если пользователь регистрируется
             auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
                 if (it.isSuccessful) {
                     Log.d(DriverSignInActivity.TAG, "createUserWithEmail:success")
                     val user = auth.currentUser
-                    createUser(user)
-                    /*todo start activity create passenger user
-                     val intent = Intent(this@SignInActivity, UserListActivity::class.java)
-                     intent.putExtra(ConstKey.USER_NAME, nameEditText.text.toString().trim())
-                     startActivity(intent)*/
+                   //todo createUser(user)
+                    startActivity(
+                        Intent(
+                            this@PassengerSignInActivity,
+                            PassengerMapsActivity::class.java
+                        )
+                    )
                 } else {
                     Log.w(DriverSignInActivity.TAG, "signInWithEmail:failure", it.exception)
                     Toast.makeText(
@@ -162,7 +164,6 @@ class PassengerSignInActivity : AppCompatActivity() {
         }
     }
 
-    //внесенние данных в базу данных
     private fun createUser(firebaseUser: FirebaseUser?) {
         val user = User(
             textInputName.editText?.text.toString().trim(),
@@ -175,14 +176,16 @@ class PassengerSignInActivity : AppCompatActivity() {
     fun toggleLoginSignUp(view: View) {
         if (isLoginModeActive) {
             isLoginModeActive = false
-            loginSignUpButton.text = "Sign Up"
-            toggleLoginSignUpTextView.text = "Or, log in"
+            loginSignUpButton.text = getString(R.string.sign_up)
+            toggleLoginSignUpTextView.text = getString(R.string.or_log_in)
             textInputConfirmPassword.visibility = View.VISIBLE
+            textInputName.visibility = View.VISIBLE
         } else {
             isLoginModeActive = true
-            loginSignUpButton.text = "Log In"
-            toggleLoginSignUpTextView.text = "Or, sign up"
+            loginSignUpButton.text = getString(R.string.log_in)
+            toggleLoginSignUpTextView.text = getString(R.string.or_sign_up)
             textInputConfirmPassword.visibility = View.GONE
+            textInputName.visibility = View.GONE
         }
     }
 

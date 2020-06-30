@@ -30,8 +30,11 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".googlemap.DriverMapsActivity"
-            android:label="@string/title_activity_driver_maps"></activity>
+            android:name=".activity.PassengerMapsActivity"
+            android:label="@string/title_activity_passenger_maps" />
+        <activity
+            android:name=".activity.DriverMapsActivity"
+            android:label="@string/title_activity_driver_maps" />
         <activity android:name=".activity.DriverSignInActivity" />
         <activity android:name=".activity.PassengerSignInActivity" />
         <activity android:name=".activity.ChoseModeActivity" />

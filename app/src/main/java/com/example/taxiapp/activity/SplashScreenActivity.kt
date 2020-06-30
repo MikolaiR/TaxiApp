@@ -15,7 +15,6 @@ class SplashScreenActivity : AppCompatActivity() {
             override fun run() {
                 super.run()
                 try {
-                    //поток засыпает на 5 сек и затем запускается finally
                     sleep(3000)
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -29,7 +28,6 @@ class SplashScreenActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        //закончить активити что бы не висело в паматя
         finish()
     }
 }
